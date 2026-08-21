@@ -1,0 +1,9 @@
+-r requirements.txt
+pytest>=8.1.1
+pytest-django>=4.8.0
+pytest-cov>=4.1.0
+flake8>=7.0.0
+black>=24.3.0
+isort>=5.13.2
+factory-boy>=3.3.0
+freezegun>=1.4.0

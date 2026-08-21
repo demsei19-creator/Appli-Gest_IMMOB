@@ -1,0 +1,77 @@
+# Python / Django
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*db.sqlite3
+*.sqlite3
+*.sqlite3-journal
+db.sqlite3-journal
+media/
+staticfiles/
+backend/media/
+backend/staticfiles/
+
+# Logs
+*.log
+logs/
+celerybeat-schedule
+celerybeat.pid
+
+# Node / Frontend
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+dist/
+frontend/dist/
+frontend/dist-ssr/
+*.local
+
+# Environment Variables & Secrets (CRITICAL - Rule 1)
+.env
+.env*
+!.env.example
+backend/.env
+backend/.env*
+frontend/.env
+frontend/.env*
+*.pem
+*.key
+
+# IDEs & System
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Testing & Coverage
+.coverage
+htmlcov/
+.pytest_cache/
+.vitest/
