@@ -16,11 +16,20 @@ ALLOWED_HOSTS = config(
 )
 
 # CSRF Trusted Origins for cloud deployments (Render, Vercel, etc.)
-CSRF_TRUSTED_ORIGINS = config(
+_prod_raw_csrf = config(
     'CSRF_TRUSTED_ORIGINS',
     default='https://*.onrender.com,https://*.vercel.app,http://localhost:5173',
     cast=Csv()
 )
+CSRF_TRUSTED_ORIGINS = [normalize_origin(o) for o in _prod_raw_csrf if normalize_origin(o)]
+
+# CORS Configuration in production
+_prod_raw_cors = config(
+    'CORS_ALLOWED_ORIGINS',
+    default='http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000',
+    cast=Csv()
+)
+CORS_ALLOWED_ORIGINS = [normalize_origin(o) for o in _prod_raw_cors if normalize_origin(o)]
 
 # Database Configuration (PostgreSQL Cloud: Neon, Render, Supabase, etc.)
 database_url = config('DATABASE_URL', default=None)

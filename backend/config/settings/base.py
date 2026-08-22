@@ -171,21 +171,31 @@ SIMPLE_JWT = {
     'USER_ID_CLAIM': 'user_id',
 }
 
+def normalize_origin(origin: str) -> str:
+    origin = origin.strip()
+    if not origin:
+        return ''
+    if not (origin.startswith('http://') or origin.startswith('https://')):
+        return f'https://{origin}'
+    return origin
+
 # CORS Configuration
 CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL_ORIGINS', default=False, cast=bool)
-CORS_ALLOWED_ORIGINS = config(
+_raw_cors = config(
     'CORS_ALLOWED_ORIGINS',
     default='http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000',
     cast=Csv()
 )
+CORS_ALLOWED_ORIGINS = [normalize_origin(o) for o in _raw_cors if normalize_origin(o)]
 CORS_ALLOW_CREDENTIALS = True
 
 # CSRF Trusted Origins (essential for HTTPS proxies, Render, Vercel)
-CSRF_TRUSTED_ORIGINS = config(
+_raw_csrf = config(
     'CSRF_TRUSTED_ORIGINS',
     default='http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000',
     cast=Csv()
 )
+CSRF_TRUSTED_ORIGINS = [normalize_origin(o) for o in _raw_csrf if normalize_origin(o)]
 
 # Redis & Celery
 REDIS_URL = config('REDIS_URL', default='redis://localhost:6379/0')
