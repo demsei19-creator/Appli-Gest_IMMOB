@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, User, Building, Phone, AlertCircle } from 'lucide-react';
+import { Mail, Lock, User, Building, Phone, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useAuth } from '@/hooks/useAuth';
@@ -19,6 +19,8 @@ export const RegisterPage: React.FC = () => {
     phoneNumber: '',
   });
 
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -60,7 +62,7 @@ export const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-950 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
         <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-blue-600 text-white font-bold text-xl shadow-lg shadow-blue-500/30 mb-4">
           IM
@@ -73,7 +75,7 @@ export const RegisterPage: React.FC = () => {
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-lg px-4">
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-lg w-full">
         <div className="bg-slate-900/90 backdrop-blur-md py-8 px-6 shadow-2xl rounded-2xl border border-slate-800 sm:px-10">
           {errorMessage && (
             <div className="mb-5 p-3.5 bg-rose-500/10 border border-rose-500/30 rounded-xl text-xs text-rose-400 flex items-start gap-2.5">
@@ -83,7 +85,7 @@ export const RegisterPage: React.FC = () => {
           )}
 
           <form className="space-y-4" onSubmit={handleSubmit}>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input
                 label="Prénom"
                 required
@@ -127,22 +129,42 @@ export const RegisterPage: React.FC = () => {
               className="bg-slate-950 text-white border-slate-700 placeholder:text-slate-500"
             />
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input
                 label="Mot de passe"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 required
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 leftIcon={<Lock className="w-4 h-4" />}
+                rightElement={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="p-1 text-slate-400 hover:text-slate-200 transition-colors focus:outline-none"
+                    title={showPassword ? "Masquer" : "Afficher"}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                }
                 className="bg-slate-950 text-white border-slate-700 placeholder:text-slate-500"
               />
               <Input
                 label="Confirmer"
-                type="password"
+                type={showPasswordConfirm ? 'text' : 'password'}
                 required
                 value={formData.passwordConfirm}
                 onChange={(e) => setFormData({ ...formData, passwordConfirm: e.target.value })}
+                rightElement={
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
+                    className="p-1 text-slate-400 hover:text-slate-200 transition-colors focus:outline-none"
+                    title={showPasswordConfirm ? "Masquer" : "Afficher"}
+                  >
+                    {showPasswordConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                }
                 className="bg-slate-950 text-white border-slate-700 placeholder:text-slate-500"
               />
             </div>

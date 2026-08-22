@@ -8,6 +8,7 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   helperText?: string;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  rightElement?: React.ReactNode;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(({
@@ -16,6 +17,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
   helperText,
   leftIcon,
   rightIcon,
+  rightElement,
   className,
   id,
   ...props
@@ -42,7 +44,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
             clsx(
               'block w-full rounded-lg border bg-white px-3.5 py-2 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
               leftIcon && 'pl-10',
-              rightIcon && 'pr-10',
+              (rightIcon || rightElement) && 'pr-10',
               error
                 ? 'border-rose-300 text-rose-900 focus:border-rose-500 focus:ring-rose-500 bg-rose-50/30'
                 : 'border-slate-300 hover:border-slate-400',
@@ -51,9 +53,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
           )}
           {...props}
         />
-        {rightIcon && (
+        {rightIcon && !rightElement && (
           <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
             {rightIcon}
+          </div>
+        )}
+        {rightElement && (
+          <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+            {rightElement}
           </div>
         )}
       </div>

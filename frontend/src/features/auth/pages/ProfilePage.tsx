@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User as UserIcon, Mail, Phone, Building, Lock, ShieldCheck, CheckCircle2, AlertCircle } from 'lucide-react';
+import { User as UserIcon, Mail, Phone, Building, Lock, ShieldCheck, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Card, CardHeader, CardTitle, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -23,6 +23,10 @@ export const ProfilePage: React.FC = () => {
     new_password: '',
     new_password_confirm: '',
   });
+
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showNewPasswordConfirm, setShowNewPasswordConfirm] = useState(false);
 
   const [profileStatus, setProfileStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [passwordStatus, setPasswordStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -214,30 +218,60 @@ export const ProfilePage: React.FC = () => {
               <form onSubmit={handlePasswordSubmit} className="space-y-4">
                 <Input
                   label="Mot de passe actuel"
-                  type="password"
+                  type={showOldPassword ? 'text' : 'password'}
                   required
                   value={passwordForm.old_password}
                   onChange={(e) => setPasswordForm({ ...passwordForm, old_password: e.target.value })}
                   leftIcon={<Lock className="w-4 h-4" />}
+                  rightElement={
+                    <button
+                      type="button"
+                      onClick={() => setShowOldPassword(!showOldPassword)}
+                      className="p-1 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                      title={showOldPassword ? "Masquer" : "Afficher"}
+                    >
+                      {showOldPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  }
                 />
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
                     label="Nouveau mot de passe"
-                    type="password"
+                    type={showNewPassword ? 'text' : 'password'}
                     required
                     value={passwordForm.new_password}
                     onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })}
                     leftIcon={<Lock className="w-4 h-4" />}
+                    rightElement={
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        className="p-1 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                        title={showNewPassword ? "Masquer" : "Afficher"}
+                      >
+                        {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    }
                     helperText="Minimum 8 caractères, lettres et chiffres."
                   />
                   <Input
                     label="Confirmer le nouveau mot de passe"
-                    type="password"
+                    type={showNewPasswordConfirm ? 'text' : 'password'}
                     required
                     value={passwordForm.new_password_confirm}
                     onChange={(e) => setPasswordForm({ ...passwordForm, new_password_confirm: e.target.value })}
                     leftIcon={<Lock className="w-4 h-4" />}
+                    rightElement={
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPasswordConfirm(!showNewPasswordConfirm)}
+                        className="p-1 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                        title={showNewPasswordConfirm ? "Masquer" : "Afficher"}
+                      >
+                        {showNewPasswordConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    }
                   />
                 </div>
 

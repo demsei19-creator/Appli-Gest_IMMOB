@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Users, Plus, Shield, ShieldAlert, CheckCircle2, XCircle, Search, Mail, Phone, Lock } from 'lucide-react';
+import { Users, Plus, Shield, ShieldAlert, CheckCircle2, XCircle, Search, Mail, Phone, Lock, Eye, EyeOff } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -15,6 +15,7 @@ export const TeamManagementPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<SubUserCreatePayload>({
@@ -213,11 +214,21 @@ export const TeamManagementPage: React.FC = () => {
 
           <Input
             label="Mot de passe provisoire"
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             required
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             leftIcon={<Lock className="w-4 h-4" />}
+            rightElement={
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="p-1 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                title={showPassword ? "Masquer" : "Afficher"}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            }
             helperText="Le collaborateur pourra le modifier depuis son profil."
           />
 

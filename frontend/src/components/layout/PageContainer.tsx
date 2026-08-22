@@ -14,17 +14,17 @@ export const PageContainer: React.FC<PageContainerProps> = ({
   children,
 }) => {
   return (
-    <div className="flex-1 p-6 md:p-8 max-w-7xl mx-auto w-full space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="flex-1 p-4 sm:p-6 md:p-8 max-w-7xl mx-auto w-full space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
           <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight font-['Outfit']">
             {title}
           </h2>
           {description && (
-            <p className="text-xs md:text-sm text-slate-500 mt-1">{description}</p>
+            <p className="text-xs md:text-sm text-slate-500 mt-0.5 sm:mt-1">{description}</p>
           )}
         </div>
-        {action && <div className="shrink-0">{action}</div>}
+        {action && <div className="shrink-0 w-full sm:w-auto">{action}</div>}
       </div>
 
       <div>{children}</div>
