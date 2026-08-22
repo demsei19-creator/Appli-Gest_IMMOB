@@ -214,3 +214,8 @@ SPECTACULAR_SETTINGS = {
     'SERVE_INCLUDE_SCHEMA': False,
     'COMPONENT_SPLIT_REQUEST': True,
 }
+
+# Frontend & OAuth Configuration
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:5173')
+GOOGLE_CLIENT_ID = config('GOOGLE_CLIENT_ID', default='')
+

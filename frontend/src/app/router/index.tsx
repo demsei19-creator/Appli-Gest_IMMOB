@@ -27,6 +27,8 @@ import { TeamManagementPage } from '@/features/administration/pages/TeamManageme
 import { ProfilePage } from '@/features/auth/pages/ProfilePage';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { RegisterPage } from '@/features/auth/pages/RegisterPage';
+import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage';
+import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage';
 
 export const router = createBrowserRouter([
   {
@@ -36,6 +38,14 @@ export const router = createBrowserRouter([
   {
     path: '/register',
     element: <RegisterPage />,
+  },
+  {
+    path: '/forgot-password',
+    element: <ForgotPasswordPage />,
+  },
+  {
+    path: '/reset-password',
+    element: <ResetPasswordPage />,
   },
   {
     path: '/',

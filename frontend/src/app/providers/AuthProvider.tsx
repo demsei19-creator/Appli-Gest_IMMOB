@@ -1,12 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@/types';
-import { authService, LoginPayload, RegisterPayload } from '@/services/auth/authService';
+import { authService, LoginPayload, RegisterPayload, GoogleAuthPayload } from '@/services/auth/authService';
 
 export interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (payload: LoginPayload) => Promise<void>;
+  googleLogin: (payload: GoogleAuthPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (updatedData: Partial<User>) => void;
@@ -68,6 +69,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const googleLogin = async (payload: GoogleAuthPayload) => {
+    setIsLoading(true);
+    try {
+      const data = await authService.googleAuth(payload);
+      localStorage.setItem('access_token', data.tokens.access);
+      localStorage.setItem('refresh_token', data.tokens.refresh);
+      localStorage.setItem('user_profile', JSON.stringify(data.user));
+      setUser(data.user);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const register = async (payload: RegisterPayload) => {
     setIsLoading(true);
     try {
@@ -108,6 +122,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthenticated: !!user && !!localStorage.getItem('access_token'),
         isLoading,
         login,
+        googleLogin,
         register,
         logout,
         updateUser,

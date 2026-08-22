@@ -7,6 +7,27 @@ export interface LoginPayload {
   remember_me?: boolean;
 }
 
+export interface GoogleAuthPayload {
+  id_token?: string;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+  avatar?: string;
+  company_name?: string;
+}
+
+export interface ForgotPasswordPayload {
+  email: string;
+}
+
+export interface ResetPasswordPayload {
+  email: string;
+  token: string;
+  uid?: string;
+  new_password: string;
+  new_password_confirm: string;
+}
+
 export interface RegisterPayload {
   email: string;
   password: string;
@@ -40,6 +61,15 @@ export interface AuthTokens {
 export interface AuthResponseData {
   user: User;
   tokens: AuthTokens;
+  is_new?: boolean;
+}
+
+export interface ForgotPasswordResponseData {
+  sent: boolean;
+  message: string;
+  reset_link?: string;
+  token?: string;
+  uid?: string;
 }
 
 export const authService = {
@@ -50,6 +80,21 @@ export const authService = {
 
   async login(payload: LoginPayload): Promise<AuthResponseData> {
     const response = await apiClient.post<ApiResponse<AuthResponseData>>('/auth/auth/login/', payload);
+    return response.data.data;
+  },
+
+  async googleAuth(payload: GoogleAuthPayload): Promise<AuthResponseData> {
+    const response = await apiClient.post<ApiResponse<AuthResponseData>>('/auth/auth/google/', payload);
+    return response.data.data;
+  },
+
+  async forgotPassword(payload: ForgotPasswordPayload): Promise<ForgotPasswordResponseData> {
+    const response = await apiClient.post<ApiResponse<ForgotPasswordResponseData>>('/auth/auth/forgot-password/', payload);
+    return response.data.data;
+  },
+
+  async resetPassword(payload: ResetPasswordPayload): Promise<{ user: User }> {
+    const response = await apiClient.post<ApiResponse<{ user: User }>>('/auth/auth/reset-password/', payload);
     return response.data.data;
   },
 

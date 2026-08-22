@@ -7,6 +7,9 @@ from common.permissions import IsOwner
 from .serializers import (
     RegisterSerializer,
     LoginSerializer,
+    GoogleAuthSerializer,
+    ForgotPasswordSerializer,
+    ResetPasswordSerializer,
     UserProfileUpdateSerializer,
     UserSerializer,
     ChangePasswordSerializer,
@@ -82,6 +85,98 @@ class LoginView(APIView):
         )
 
 
+class GoogleAuthView(APIView):
+    """
+    POST /api/v1/accounts/auth/google/
+    Authenticate or Register via Google OAuth.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = GoogleAuthSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        ip = get_client_ip(request)
+
+        user, tokens, is_new = AuthService.google_authenticate(
+            validated_data=serializer.validated_data,
+            ip_address=ip
+        )
+
+        msg = "Bienvenue sur ImmoGestion Pro !" if is_new else "Connexion avec Google réussie."
+
+        return Response(
+            {
+                "success": True,
+                "message": msg,
+                "data": {
+                    "user": UserSerializer(user).data,
+                    "tokens": tokens,
+                    "is_new": is_new,
+                },
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class ForgotPasswordView(APIView):
+    """
+    POST /api/v1/accounts/auth/forgot-password/
+    Send password reset instructions via email.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = ForgotPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        ip = get_client_ip(request)
+
+        result = AuthService.request_password_reset(
+            email=serializer.validated_data['email'],
+            ip_address=ip
+        )
+
+        return Response(
+            {
+                "success": True,
+                "message": result.get("message", "Instructions de réinitialisation envoyées."),
+                "data": result,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class ResetPasswordView(APIView):
+    """
+    POST /api/v1/accounts/auth/reset-password/
+    Reset user password using verification token.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = ResetPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        ip = get_client_ip(request)
+
+        user = AuthService.reset_password_with_token(
+            email=serializer.validated_data['email'],
+            token=serializer.validated_data['token'],
+            new_password=serializer.validated_data['new_password'],
+            uid=serializer.validated_data.get('uid'),
+            ip_address=ip
+        )
+
+        return Response(
+            {
+                "success": True,
+                "message": "Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter.",
+                "data": {
+                    "user": UserSerializer(user).data
+                }
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
 class LogoutView(APIView):
     """
     POST /api/v1/accounts/auth/logout/
@@ -109,8 +204,8 @@ class LogoutView(APIView):
 
 class CurrentUserProfileView(APIView):
     """
-    GET /api/v1/accounts/profile/ - Fetch current user profile
-    PATCH /api/v1/accounts/profile/ - Update current user profile
+    GET /api/v1/accounts/profile/ (or /me/) - Retrieve authenticated user profile
+    PATCH /api/v1/accounts/profile/ - Update authenticated user personal info
     """
     permission_classes = [IsAuthenticated]
 
@@ -122,16 +217,23 @@ class CurrentUserProfileView(APIView):
         })
 
     def patch(self, request):
-        serializer = UserProfileUpdateSerializer(
-            request.user,
-            data=request.data,
-            partial=True
-        )
+        serializer = UserProfileUpdateSerializer(request.user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
+
+        ip = get_client_ip(request)
+        AuthService.log_action(
+            user=user,
+            action='UPDATE',
+            resource_type='User',
+            resource_id=str(user.id),
+            changes=serializer.validated_data,
+            ip_address=ip
+        )
+
         return Response({
             "success": True,
-            "message": "Profil mis à jour avec succès.",
+            "message": "Votre profil a été mis à jour.",
             "data": UserSerializer(user).data
         })
 
@@ -139,14 +241,14 @@ class CurrentUserProfileView(APIView):
 class ChangePasswordView(APIView):
     """
     POST /api/v1/accounts/auth/change-password/
-    Allows authenticated user to change their password.
+    Password change endpoint for authenticated users.
     """
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         serializer = ChangePasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
+
         old_password = serializer.validated_data['old_password']
         new_password = serializer.validated_data['new_password']
         ip = get_client_ip(request)

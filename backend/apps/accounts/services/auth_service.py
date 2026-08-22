@@ -1,4 +1,11 @@
+import json
+import urllib.request
 from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.core.mail import send_mail
+from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -13,7 +20,7 @@ User = get_user_model()
 class AuthService(BaseService):
     """
     Business service handling registration, authentication, password management,
-    and team collaborator delegation under strict multi-tenant isolation.
+    Google OAuth, and team collaborator delegation under strict multi-tenant isolation.
     """
 
     @classmethod
@@ -92,6 +99,186 @@ class AuthService(BaseService):
         )
 
         return user, tokens
+
+    @classmethod
+    def _verify_google_id_token(cls, id_token: str) -> dict:
+        """Verifies Google ID token against Google's tokeninfo endpoint."""
+        try:
+            url = f"https://oauth2.googleapis.com/tokeninfo?id_token={id_token}"
+            req = urllib.request.Request(url, headers={'User-Agent': 'ImmoGestion/1.0'})
+            with urllib.request.urlopen(req, timeout=5) as response:
+                data = json.loads(response.read().decode('utf-8'))
+                if 'email' in data:
+                    return data
+        except Exception:
+            pass
+        return {}
+
+    @classmethod
+    @transaction.atomic
+    def google_authenticate(cls, validated_data: dict, ip_address: str = None) -> tuple[User, dict, bool]:
+        """
+        Authenticates or signs up a user via Google OAuth.
+        """
+        id_token = validated_data.get('id_token')
+        email = validated_data.get('email', '')
+        first_name = validated_data.get('first_name', '')
+        last_name = validated_data.get('last_name', '')
+        avatar = validated_data.get('avatar', '')
+
+        if id_token:
+            google_info = cls._verify_google_id_token(id_token)
+            if google_info and google_info.get('email'):
+                email = google_info.get('email')
+                first_name = google_info.get('given_name', first_name)
+                last_name = google_info.get('family_name', last_name)
+                avatar = google_info.get('picture', avatar)
+
+        if not email:
+            raise ValidationException("Impossible de récupérer l'adresse email depuis le compte Google.", code="GOOGLE_AUTH_FAILED")
+
+        email = email.strip().lower()
+        user = User.objects.filter(email__iexact=email).first()
+        is_new = False
+
+        if not user:
+            is_new = True
+            user = User.objects.create_user(
+                email=email,
+                first_name=first_name or "Utilisateur",
+                last_name=last_name or "Google",
+                role=UserRole.OWNER,
+                company_name=validated_data.get('company_name', 'Patrimoine Immobilier'),
+                is_active=True
+            )
+        else:
+            if first_name and not user.first_name:
+                user.first_name = first_name
+            if last_name and not user.last_name:
+                user.last_name = last_name
+
+        if not user.is_active:
+            raise PermissionDeniedException("Votre compte est désactivé ou suspendu.", code="ACCOUNT_DISABLED")
+
+        user.last_login = timezone.now()
+        if ip_address:
+            user.last_login_ip = ip_address
+        user.save(update_fields=['last_login', 'last_login_ip', 'first_name', 'last_name'])
+
+        tokens = cls.generate_tokens_for_user(user)
+
+        AuditService.log_action(
+            user=user,
+            action='LOGIN_GOOGLE',
+            resource_type='User',
+            resource_id=str(user.id),
+            changes={'email': user.email, 'is_new': is_new},
+            ip_address=ip_address
+        )
+
+        return user, tokens, is_new
+
+    @classmethod
+    def request_password_reset(cls, email: str, ip_address: str = None) -> dict:
+        """
+        Generates a secure password reset token and sends email instructions.
+        """
+        email = email.strip().lower()
+        try:
+            user = User.objects.get(email__iexact=email)
+        except User.DoesNotExist:
+            return {
+                "sent": True,
+                "message": "Si un compte est associé à cette adresse, un lien de réinitialisation vous a été envoyé."
+            }
+
+        if not user.is_active:
+            raise PermissionDeniedException("Votre compte est désactivé.", code="ACCOUNT_DISABLED")
+
+        token = default_token_generator.make_token(user)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        
+        frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+        reset_link = f"{frontend_url}/reset-password?uid={uid}&token={token}&email={email}"
+
+        subject = "Réinitialisation de votre mot de passe - ImmoGestion Pro"
+        message = f"""Bonjour {user.get_full_name() or user.email},
+
+Vous avez demandé la réinitialisation de votre mot de passe sur la plateforme ImmoGestion Pro.
+
+Veuillez cliquer sur le lien ci-dessous pour choisir votre nouveau mot de passe :
+{reset_link}
+
+Ce lien est sécurisé et valable pour une durée limitée. Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet email.
+
+Cordialement,
+L'équipe ImmoGestion Pro
+"""
+        try:
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@appli-imob.com'),
+                recipient_list=[user.email],
+                fail_silently=True,
+            )
+        except Exception:
+            pass
+
+        AuditService.log_action(
+            user=user,
+            action='REQUEST_RESET',
+            resource_type='User',
+            resource_id=str(user.id),
+            changes={'email': user.email},
+            ip_address=ip_address
+        )
+
+        return {
+            "sent": True,
+            "reset_link": reset_link,
+            "token": token,
+            "uid": uid,
+            "message": "Si un compte est associé à cette adresse, un lien de réinitialisation vous a été envoyé."
+        }
+
+    @classmethod
+    @transaction.atomic
+    def reset_password_with_token(cls, email: str, token: str, new_password: str, uid: str = None, ip_address: str = None) -> User:
+        """
+        Validates the password reset token and updates the user's password.
+        """
+        email = email.strip().lower()
+        user = None
+        if uid:
+            try:
+                user_id = force_str(urlsafe_base64_decode(uid))
+                user = User.objects.get(pk=user_id)
+            except Exception:
+                pass
+
+        if not user:
+            try:
+                user = User.objects.get(email__iexact=email)
+            except User.DoesNotExist:
+                raise ValidationException("Lien de réinitialisation invalide ou utilisateur introuvable.", code="INVALID_RESET_REQUEST")
+
+        if not default_token_generator.check_token(user, token):
+            raise ValidationException("Le lien de réinitialisation est invalide ou a expiré. Veuillez refaire une demande.", code="INVALID_OR_EXPIRED_TOKEN")
+
+        user.set_password(new_password)
+        user.save(update_fields=['password'])
+
+        AuditService.log_action(
+            user=user,
+            action='RESET_PASSWORD',
+            resource_type='User',
+            resource_id=str(user.id),
+            changes={'event': 'password_reset_completed'},
+            ip_address=ip_address
+        )
+
+        return user
 
     @classmethod
     @transaction.atomic

@@ -178,3 +178,51 @@ class SubUserListSerializer(serializers.ModelSerializer):
 class SubUserStatusSerializer(serializers.Serializer):
     """Serializer to activate / deactivate a team member."""
     is_active = serializers.BooleanField(required=True)
+
+
+class GoogleAuthSerializer(serializers.Serializer):
+    """Serializer for Google OAuth authentication."""
+    id_token = serializers.CharField(required=False, allow_blank=True)
+    email = serializers.EmailField(required=False, allow_blank=True)
+    first_name = serializers.CharField(required=False, allow_blank=True)
+    last_name = serializers.CharField(required=False, allow_blank=True)
+    avatar = serializers.URLField(required=False, allow_blank=True)
+    company_name = serializers.CharField(required=False, allow_blank=True)
+
+    def validate(self, attrs):
+        if not attrs.get('id_token') and not attrs.get('email'):
+            raise serializers.ValidationError("Le jeton Google ou l'email est requis.")
+        return attrs
+
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    """Serializer for requesting a password reset email."""
+    email = serializers.EmailField(required=True)
+
+    def validate_email(self, value):
+        return value.strip().lower()
+
+
+class ResetPasswordSerializer(serializers.Serializer):
+    """Serializer for resetting password with token."""
+    email = serializers.EmailField(required=True)
+    token = serializers.CharField(required=True)
+    uid = serializers.CharField(required=False, allow_blank=True)
+    new_password = serializers.CharField(required=True, write_only=True, min_length=8)
+    new_password_confirm = serializers.CharField(required=True, write_only=True, min_length=8)
+
+    def validate_email(self, value):
+        return value.strip().lower()
+
+    def validate_new_password(self, value):
+        if len(value) < 8:
+            raise serializers.ValidationError("Le mot de passe doit comporter au moins 8 caractères.")
+        if not re.search(r'[A-Za-z]', value) or not re.search(r'\d', value):
+            raise serializers.ValidationError("Le mot de passe doit contenir au moins une lettre et un chiffre.")
+        return value
+
+    def validate(self, attrs):
+        if attrs['new_password'] != attrs['new_password_confirm']:
+            raise serializers.ValidationError({"new_password_confirm": "Les mots de passe ne correspondent pas."})
+        return attrs
+
