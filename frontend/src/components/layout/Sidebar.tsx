@@ -18,11 +18,14 @@ import {
   ShieldAlert,
   X,
 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { UserRole } from '@/types';
 
 interface NavItem {
   label: string;
   href: string;
   icon: React.ReactNode;
+  allowedRoles?: UserRole[];
 }
 
 const navSections: { title: string; items: NavItem[] }[] = [
@@ -30,7 +33,7 @@ const navSections: { title: string; items: NavItem[] }[] = [
     title: 'PILOTAGE',
     items: [
       { label: 'Tableau de bord', href: '/dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
-      { label: 'Rapports & Stats', href: '/reports', icon: <BarChart3 className="w-4 h-4" /> },
+      { label: 'Rapports & Stats', href: '/reports', icon: <BarChart3 className="w-4 h-4" />, allowedRoles: ['OWNER', 'ACCOUNTANT'] },
     ],
   },
   {
@@ -53,7 +56,7 @@ const navSections: { title: string; items: NavItem[] }[] = [
       { label: 'Avis & Loyers', href: '/billing', icon: <Receipt className="w-4 h-4" /> },
       { label: 'Paiements & Reçus', href: '/payments', icon: <CreditCard className="w-4 h-4" /> },
       { label: 'Dépenses & Charges', href: '/expenses', icon: <TrendingDown className="w-4 h-4" /> },
-      { label: 'Impôts & Fiscalité', href: '/taxes', icon: <Scale className="w-4 h-4" /> },
+      { label: 'Impôts & Fiscalité', href: '/taxes', icon: <Scale className="w-4 h-4" />, allowedRoles: ['OWNER', 'ACCOUNTANT'] },
     ],
   },
   {
@@ -62,8 +65,8 @@ const navSections: { title: string; items: NavItem[] }[] = [
       { label: 'Maintenance', href: '/maintenance', icon: <Wrench className="w-4 h-4" /> },
       { label: 'Fournisseurs', href: '/suppliers', icon: <Truck className="w-4 h-4" /> },
       { label: 'Documents & GED', href: '/documents', icon: <FolderLock className="w-4 h-4" /> },
-      { label: 'Équipe & Collaborateurs', href: '/admin/team', icon: <Users className="w-4 h-4" /> },
-      { label: 'Audit & Sécurité', href: '/admin/audit', icon: <ShieldAlert className="w-4 h-4" /> },
+      { label: 'Équipe & Collaborateurs', href: '/admin/team', icon: <Users className="w-4 h-4" />, allowedRoles: ['OWNER'] },
+      { label: 'Audit & Sécurité', href: '/admin/audit', icon: <ShieldAlert className="w-4 h-4" />, allowedRoles: ['OWNER'] },
     ],
   },
 ];
@@ -73,11 +76,26 @@ interface SidebarContentProps {
 }
 
 const SidebarContent: React.FC<SidebarContentProps> = ({ onItemClick }) => {
+  const { user } = useAuth();
+  const currentRole = user?.role;
+
+  // Filter sections and items based on the user's role
+  const visibleSections = navSections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => {
+        if (!item.allowedRoles) return true;
+        if (!currentRole) return false;
+        return item.allowedRoles.includes(currentRole);
+      }),
+    }))
+    .filter((section) => section.items.length > 0);
+
   return (
     <>
       {/* Navigation Links */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
-        {navSections.map((section, idx) => (
+        {visibleSections.map((section, idx) => (
           <div key={idx} className="space-y-1">
             <h4 className="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">
               {section.title}
@@ -112,7 +130,9 @@ const SidebarContent: React.FC<SidebarContentProps> = ({ onItemClick }) => {
           <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
           <span className="text-[11px] text-slate-400 font-medium">Système Opérationnel</span>
         </div>
-        <span className="text-[10px] text-slate-500 block mt-0.5">Version 1.0 (Architecture v1.0)</span>
+        <span className="text-[10px] text-slate-500 block mt-0.5">
+          Espace {user?.role_display || (user?.role === 'OWNER' ? 'Propriétaire' : user?.role === 'MANAGER' ? 'Gestionnaire' : 'Comptable')}
+        </span>
       </div>
     </>
   );

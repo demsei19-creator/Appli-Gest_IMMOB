@@ -64,7 +64,14 @@ export const router = createBrowserRouter([
       { path: 'maintenance/:id', element: <MaintenanceDetailPage /> },
       { path: 'suppliers', element: <SuppliersPage /> },
       { path: 'expenses', element: <ExpensesPage /> },
-      { path: 'taxes', element: <TaxesPage /> },
+      {
+        path: 'taxes',
+        element: (
+          <ProtectedRoute allowedRoles={['OWNER', 'ACCOUNTANT']}>
+            <TaxesPage />
+          </ProtectedRoute>
+        ),
+      },
       { path: 'documents', element: <DocumentsPage /> },
       { path: 'reports', element: <FinancialReportPage /> },
       {
@@ -75,7 +82,14 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      { path: 'admin/audit', element: <AdminAuditPage /> },
+      {
+        path: 'admin/audit',
+        element: (
+          <ProtectedRoute allowedRoles={['OWNER']}>
+            <AdminAuditPage />
+          </ProtectedRoute>
+        ),
+      },
     ],
   },
   {
