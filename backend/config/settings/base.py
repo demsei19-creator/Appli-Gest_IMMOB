@@ -172,12 +172,20 @@ SIMPLE_JWT = {
 }
 
 # CORS Configuration
+CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL_ORIGINS', default=False, cast=bool)
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS',
     default='http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000',
     cast=Csv()
 )
 CORS_ALLOW_CREDENTIALS = True
+
+# CSRF Trusted Origins (essential for HTTPS proxies, Render, Vercel)
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS',
+    default='http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000',
+    cast=Csv()
+)
 
 # Redis & Celery
 REDIS_URL = config('REDIS_URL', default='redis://localhost:6379/0')
