@@ -135,9 +135,9 @@ export const PaymentReceiptPage: React.FC = () => {
             </div>
           </CardHeader>
 
-          <CardBody className="p-8 space-y-8 text-xs">
+          <CardBody className="p-4 sm:p-8 space-y-6 sm:space-y-8 text-xs">
             {/* Landlord & Tenant Two Columns */}
-            <div className="grid grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
               <div className="p-4 bg-slate-50 rounded-2xl space-y-1.5 border border-slate-100">
                 <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px] block">
                   Bailleur / Gestionnaire
@@ -158,12 +158,12 @@ export const PaymentReceiptPage: React.FC = () => {
             </div>
 
             {/* Official Certification Statement */}
-            <div className="p-5 bg-slate-50/80 border border-slate-200/80 rounded-2xl text-slate-800 leading-relaxed">
+            <div className="p-4 sm:p-5 bg-slate-50/80 border border-slate-200/80 rounded-2xl text-slate-800 leading-relaxed">
               <p>
                 Je soussigné(e) <strong>{receipt.landlord.name}</strong>, bailleur / gestionnaire de biens immobiliers, certifie avoir reçu de Monsieur / Madame / Société <strong>{receipt.tenant.full_name}</strong> la somme de :
               </p>
               <div className="my-3 p-3 bg-white rounded-xl border border-slate-200 text-center">
-                <span className="text-xl font-bold text-emerald-700 font-['Outfit']">
+                <span className="text-lg sm:text-xl font-bold text-emerald-700 font-['Outfit']">
                   {receipt.amount} FCFA
                 </span>
                 <span className="text-[11px] text-slate-400 block mt-0.5">
@@ -180,46 +180,48 @@ export const PaymentReceiptPage: React.FC = () => {
               <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3">
                 Détail des Périodes & Factures Couvertes
               </h3>
-              <table className="w-full text-left text-xs border border-slate-200 rounded-xl overflow-hidden">
-                <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
-                  <tr>
-                    <th className="px-4 py-2.5">Réf. Facture</th>
-                    <th className="px-4 py-2.5">Bien & Logement</th>
-                    <th className="px-4 py-2.5">Période d'occupation</th>
-                    <th className="px-4 py-2.5 text-right">Montant Alloué</th>
-                    <th className="px-4 py-2.5 text-right">Solde Restant</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {receipt.allocations.map((alloc, idx) => (
-                    <tr key={idx}>
-                      <td className="px-4 py-3 font-mono font-semibold text-blue-600">{alloc.invoice_number}</td>
-                      <td className="px-4 py-3 text-slate-800">
-                        {alloc.property_name} - <span className="font-mono">Lot {alloc.unit_number}</span>
-                      </td>
-                      <td className="px-4 py-3 text-slate-600">
-                        Du {alloc.period_start} au {alloc.period_end}
-                      </td>
-                      <td className="px-4 py-3 text-right font-bold text-emerald-600">
-                        {alloc.allocated_amount} FCFA
-                      </td>
-                      <td className="px-4 py-3 text-right text-slate-500 font-medium">
-                        {alloc.remaining_balance} FCFA
-                      </td>
+              <div className="w-full overflow-x-auto border border-slate-200 rounded-xl">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
+                    <tr>
+                      <th className="px-4 py-2.5 whitespace-nowrap">Réf. Facture</th>
+                      <th className="px-4 py-2.5 whitespace-nowrap">Bien & Logement</th>
+                      <th className="px-4 py-2.5 whitespace-nowrap">Période d'occupation</th>
+                      <th className="px-4 py-2.5 text-right whitespace-nowrap">Montant Alloué</th>
+                      <th className="px-4 py-2.5 text-right whitespace-nowrap">Solde Restant</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {receipt.allocations.map((alloc, idx) => (
+                      <tr key={idx}>
+                        <td className="px-4 py-3 font-mono font-semibold text-blue-600 whitespace-nowrap">{alloc.invoice_number}</td>
+                        <td className="px-4 py-3 text-slate-800 whitespace-nowrap">
+                          {alloc.property_name} - <span className="font-mono">Lot {alloc.unit_number}</span>
+                        </td>
+                        <td className="px-4 py-3 text-slate-600 whitespace-nowrap">
+                          Du {alloc.period_start} au {alloc.period_end}
+                        </td>
+                        <td className="px-4 py-3 text-right font-bold text-emerald-600 whitespace-nowrap">
+                          {alloc.allocated_amount} FCFA
+                        </td>
+                        <td className="px-4 py-3 text-right text-slate-500 font-medium whitespace-nowrap">
+                          {alloc.remaining_balance} FCFA
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             {/* Signature & Disclaimer Block */}
-            <div className="pt-6 border-t border-slate-100 grid grid-cols-2 gap-8 items-end">
+            <div className="pt-6 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 items-end">
               <div className="text-[11px] text-slate-400 space-y-1">
                 <p>Cette quittance annule tous les reçus qui auraient pu être donnés pour la même période.</p>
                 <p className="font-mono text-[10px]">Identifiant système : {receipt.payment_number}</p>
               </div>
 
-              <div className="text-right space-y-8">
+              <div className="sm:text-right space-y-4 sm:space-y-8">
                 <span className="font-semibold text-slate-700 block">Pour le Bailleur / Signature & Cachet :</span>
                 <div className="h-12 border-b border-dashed border-slate-300 inline-block w-48" />
               </div>

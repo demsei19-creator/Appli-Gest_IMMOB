@@ -123,7 +123,7 @@ export const FinancialReportPage: React.FC = () => {
           </div>
 
           {/* 4 Top Summary Boxes */}
-          <div className="grid grid-cols-4 gap-4 mb-8 text-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 text-center">
             <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
               <span className="text-[10px] uppercase font-bold text-slate-500 block">Loyers Émis</span>
               <span className="text-base font-bold text-slate-900 font-['Outfit'] mt-1 block">
@@ -239,7 +239,7 @@ export const FinancialReportPage: React.FC = () => {
           </div>
 
           {/* Signatures & Certification Block */}
-          <div className="pt-8 border-t border-slate-200 grid grid-cols-2 gap-8 text-xs text-slate-600">
+          <div className="pt-8 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 text-xs text-slate-600">
             <div>
               <span className="font-bold text-slate-800 block mb-8">Le Propriétaire / Mandataire :</span>
               <div className="border-b border-slate-300 w-48" />
